@@ -6,6 +6,7 @@ import com.fxm.customercenterbackend.common.ResultUtil;
 import com.fxm.customercenterbackend.domain.User;
 import com.fxm.customercenterbackend.exception.BussinessException;
 import com.fxm.customercenterbackend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +21,12 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
+
+    @Operation(summary = "注册")
     @PostMapping("/register")
-    public <T> BaseResponse<T> register(@RequestBody User user){
+    public <T> BaseResponse<T> register(@RequestBody User user ){
+
         if(user.getUserAccount()==null || user.getNickname() == null || user.getPassword() == null
                 || user.getUserAccount().equals("") || user.getPassword().equals("") || user.getNickname().equals(""))
             throw new BussinessException(ErrorCode.NULL_ERROR);
