@@ -30,7 +30,7 @@ public class UserController {
         if(user.getUserAccount()==null || user.getNickname() == null || user.getPassword() == null
                 || user.getUserAccount().equals("") || user.getPassword().equals("") || user.getNickname().equals(""))
             throw new BussinessException(ErrorCode.NULL_ERROR);
-        if(!user.getUserAccount().matches("[A-Za-z0-9_\\-\\u4e00-\\u9fa5]+")) throw new BussinessException("账户信息包含特殊字符");;
+        if(!user.getUserAccount().matches("[A-Za-z0-9_\\-\\u4e00-\\u9fa5]+")) throw new BussinessException("账户信息包含特殊字符");
         boolean res = userService.registerService(user.getUserAccount(), user.getPassword(), user.getNickname());
         if(!res)    throw new BussinessException("业务异常");
         return new ResultUtil().success();
