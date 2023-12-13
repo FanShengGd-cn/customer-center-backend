@@ -8,11 +8,11 @@ import com.fxm.customercenterbackend.exception.BussinessException;
  * @author fansheng
  */
 public class ResultUtil {
-    public <T> BaseResponse<T> success(T data){
+    public static  <T> BaseResponse<T> success(T data){
         return new BaseResponse<>(ErrorCode.SUCCESS.getCode(),data,ErrorCode.SUCCESS.getMessage(),
                 ErrorCode.SUCCESS.getDescription());
     }
-    public <T> BaseResponse<T> success(){
+    public static  <T> BaseResponse<T> success(){
         return new BaseResponse<>(ErrorCode.SUCCESS.getCode(),ErrorCode.SUCCESS.getMessage(),
                 ErrorCode.SUCCESS.getDescription());
     }

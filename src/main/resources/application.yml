@@ -6,6 +6,20 @@ spring:
     username: root
     password: 123456
     url: jdbc:mariadb://127.0.0.1:3306/customer-center?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+  session:
+    store-type:
+      redis
+  redis:
+    port: 6379
+    database: 1
+    host: localhost
+logging:
+  level:
+    com:
+      fxm:
+        customercenterbackend:
+          mapper: debug
+
 # knife4j的增强配置，不需要增强可以不配
 knife4j:
   enable: true
