@@ -37,7 +37,7 @@ public class TeamVO {
     /**
      * 用户id
      */
-    private Long userId;
+    private UserVO user;
 
     /**
      * 0 - 公开，1 - 私有，2 - 加密
@@ -55,8 +55,4 @@ public class TeamVO {
      */
     private Date updateTime;
 
-    /**
-     * 是否删除
-     */
-    private Integer isDelete;
 }

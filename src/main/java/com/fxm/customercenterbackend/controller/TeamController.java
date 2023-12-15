@@ -2,7 +2,7 @@ package com.fxm.customercenterbackend.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fxm.customercenterbackend.common.BaseResponse;
-import com.fxm.customercenterbackend.common.Constants;
+import com.fxm.customercenterbackend.constant.UserConstant;
 import com.fxm.customercenterbackend.common.ErrorCode;
 import com.fxm.customercenterbackend.common.ResultUtil;
 import com.fxm.customercenterbackend.exception.BussinessException;
@@ -13,6 +13,7 @@ import com.fxm.customercenterbackend.model.request.TeamUpdateRequest;
 import com.fxm.customercenterbackend.model.vo.TeamVO;
 import com.fxm.customercenterbackend.service.TeamService;
 import com.fxm.customercenterbackend.service.UserService;
+import com.fxm.customercenterbackend.service.UserTeamService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +31,9 @@ public class TeamController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private UserTeamService userTeamService;
+
     @PostMapping ("/add")
     public BaseResponse<Long> addTeam(@RequestBody Team team, HttpServletRequest request){
         if(team == null || StringUtils.isAnyBlank(team.getName()))
@@ -44,7 +48,7 @@ public class TeamController {
 
     @PostMapping("/update")
     public BaseResponse<Long> updateTeam(@RequestBody TeamUpdateRequest team, HttpServletRequest req){
-        User user = (User) req.getSession().getAttribute(Constants.SESSION_USER_ATTR);
+        User user = (User) req.getSession().getAttribute(UserConstant.SESSION_USER_ATTR);
         if(team == null || StringUtils.isAnyBlank(team.getName())){
             throw new BussinessException(ErrorCode.NULL_ERROR);
         }
@@ -76,5 +80,23 @@ public class TeamController {
             throw new BussinessException(ErrorCode.PARAMS_ERROR);
         }
         return ResultUtil.success(teamService.deleteTeam(teamId, req));
+    }
+
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestParam Long teamId, HttpServletRequest req){
+        if (userService.getLoginUser(req) == null){
+            throw new BussinessException(ErrorCode.NOT_LOGIN);
+        }
+        Boolean res = userTeamService.quitTeam(teamId, req);
+        return ResultUtil.success(res);
+    }
+
+    @PostMapping("/join")
+    public BaseResponse<Long> joinTeam(@RequestParam Long teamId, HttpServletRequest req){
+        if (userService.getLoginUser(req) == null){
+            throw new BussinessException(ErrorCode.NOT_LOGIN);
+        }
+        Long res = userTeamService.joinTeam(teamId, req);
+        return ResultUtil.success(res);
     }
 }

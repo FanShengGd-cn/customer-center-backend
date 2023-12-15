@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fxm.customercenterbackend.model.domain.User;
 import com.fxm.customercenterbackend.model.request.PageRequest;
+import com.fxm.customercenterbackend.model.request.UserLoginRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface UserService extends IService<User> {
 
     boolean registerService(String userAccount, String password, String nickname);
 
-    boolean doLogin(User user, HttpServletRequest req);
+    boolean doLogin(UserLoginRequest user, HttpServletRequest req);
 
     boolean doLogout(HttpServletRequest req);
 
@@ -25,4 +26,10 @@ public interface UserService extends IService<User> {
 
     List<User> searchPartnerByTags(List<String> tags);
     Page<User> searchPartnerPagesByTags(List<String> tags, PageRequest page);
+
+    List<User> getRecommend(User user,long num);
+
+    User getSafetyUser(User user);
+
+
 }

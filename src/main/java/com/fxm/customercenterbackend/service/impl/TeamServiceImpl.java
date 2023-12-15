@@ -13,6 +13,7 @@ import com.fxm.customercenterbackend.model.domain.UserTeam;
 import com.fxm.customercenterbackend.model.dto.TeamQuery;
 import com.fxm.customercenterbackend.model.request.TeamUpdateRequest;
 import com.fxm.customercenterbackend.model.vo.TeamVO;
+import com.fxm.customercenterbackend.model.vo.UserVO;
 import com.fxm.customercenterbackend.service.TeamService;
 import com.fxm.customercenterbackend.service.UserService;
 import com.fxm.customercenterbackend.service.UserTeamService;
@@ -27,7 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author xiang
+ * @author fansheng
  * @description 针对表【team(队伍)】的数据库操作Service实现
  * @createDate 2023-12-09 10:58:13
  */
@@ -44,6 +45,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
     @Resource
     private UserTeamService userTeamService;
+
+
 
     /**
      * 保存新队伍
@@ -75,9 +78,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             throw new BussinessException(ErrorCode.SYSTEM_ERROR);
         }
         UserTeam userTeam = new UserTeam();
-        userTeam.setTeam_id(team.getId());
-        userTeam.setUser_id(team.getUserId());
-        userTeam.setJoin_time(team.getCreateTime());
+        userTeam.setTeamId(team.getId());
+        userTeam.setUserId(team.getUserId());
+        userTeam.setJoinTime(team.getCreateTime());
         if (!userTeamService.save(userTeam)) {
             throw new BussinessException(ErrorCode.SYSTEM_ERROR);
         }
@@ -120,15 +123,19 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
     @Override
     public IPage<TeamVO> selectTeam(TeamQuery teamQuery, HttpServletRequest req) {
+        User loginUser = userService.getLoginUser(req);
         LambdaQueryChainWrapper<Team> qw = lambdaQuery();
         if (teamQuery == null) {
             throw new BussinessException(ErrorCode.NULL_ERROR);
         }
-        if (userService.getLoginUser(req) == null) {
+        if (loginUser == null) {
             throw new BussinessException(ErrorCode.NO_AUTH);
         }
         if (teamQuery.getPageNum() < 1 && teamQuery.getPageSize() < 1) {
             throw new BussinessException(ErrorCode.PARAMS_ERROR);
+        }
+        if (teamQuery.getPageNum() >3000 || teamQuery.getPageSize() > 20) {
+            throw new BussinessException(ErrorCode.PARAMS_ERROR,"参数超出范围");
         }
         if (teamQuery.getSearchText() != null) {
             qw.and(q ->
@@ -140,18 +147,26 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             qw.gt(Team::getMaxNum,teamQuery.getMaxNum());
         }
         if(teamQuery.getUserId() != null){
-            qw.eq(Team::getUserId,teamQuery.getUserId());
+            if(loginUser.getId().equals(teamQuery.getUserId()) ){
+                qw.eq(Team::getUserId,teamQuery.getUserId());
+            }else{
+                qw.and(q->q.eq(Team::getUserId,teamQuery.getUserId()).eq(Team::getStatus,0));
+            }
         }
         if(teamQuery.getExpireTime() != null && teamQuery.getExpireTime().after(new Date())){
             qw.gt(Team::getExpireTime,teamQuery.getExpireTime());
         }else{
             qw.gt(Team::getExpireTime,new Date());
         }
-        qw.eq(Team::getStatus,0);
         Page<Team> page = qw.page(new Page<>(teamQuery.getPageNum(), teamQuery.getPageSize()));
         return page.convert(t -> {
             TeamVO teamVO = new TeamVO();
             BeanUtils.copyProperties(t, teamVO);
+            User user = userService.lambdaQuery().eq(User::getId, teamQuery.getUserId()).one();
+            if(user == null)    throw new BussinessException(ErrorCode.SYSTEM_ERROR,"队伍创建者不存在");
+            UserVO safeUser = new UserVO();
+            BeanUtils.copyProperties(user, safeUser);
+            teamVO.setUser(safeUser);
             return teamVO;
         });
     }
@@ -169,6 +184,13 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         if (loginUser == null) {
             throw new BussinessException(ErrorCode.NOT_LOGIN);
         }
+        Team team = this.lambdaQuery().eq(Team::getId, teamId).one();
+        if(team ==null){
+            throw new BussinessException(ErrorCode.PARAMS_ERROR);
+        }
+        if(!team.getUserId().equals(loginUser.getId()) || loginUser.getUserRole()!=0){
+            throw new BussinessException(ErrorCode.NO_AUTH);
+        }
         List<User> users = userTeamService.selectUserByTeamId(teamId);
         if (users.size() == 0) {
             throw new BussinessException(ErrorCode.SYSTEM_ERROR,"队伍为空");
@@ -182,9 +204,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             throw new BussinessException(ErrorCode.NO_AUTH);
         }
         boolean teamRes = this.lambdaUpdate().eq(Team::getId,teamId).remove();
-        boolean userTeamRes = userTeamService.lambdaUpdate().eq(UserTeam::getTeam_id, teamId).remove();
+        boolean userTeamRes = userTeamService.lambdaUpdate().eq(UserTeam::getTeamId, teamId).remove();
         return teamRes&&userTeamRes;
     }
+
+
 }
 
 
